@@ -1,15 +1,16 @@
-# AI Fundraising: Donor Analytics and Segmentation
+# AI Fundraising: Donor Analytics, Segmentation, and Clustering
 
-A Python learning project that explores data-driven fundraising. It generates a synthetic donor dataset, produces a donor KPI report, and assigns each donor to a segment using transparent business rules. It is the first step toward a larger goal: responsible, AI-assisted fundraising intelligence.
+A Python learning project that explores data-driven fundraising. It generates a synthetic donor dataset, produces a donor KPI report, assigns each donor to a segment using transparent business rules, and groups donors with K-Means clustering to compare a data-driven view with those rules. It is the first step toward a larger goal: responsible, AI-assisted fundraising intelligence.
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![pandas](https://img.shields.io/badge/pandas-150458?logo=pandas&logoColor=white)
 ![NumPy](https://img.shields.io/badge/NumPy-013243?logo=numpy&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikitlearn&logoColor=white)
 ![Jupyter](https://img.shields.io/badge/Jupyter-F37626?logo=jupyter&logoColor=white)
 ![Status](https://img.shields.io/badge/status-early%20development-orange)
 ![Data](https://img.shields.io/badge/data-100%25%20synthetic-brightgreen)
 
-> **Status:** Early development. The current version is a set of command-line Python scripts working on synthetic CSV data. It contains **no machine learning or AI models yet**. Those are planned and listed in the [Future Roadmap](#future-roadmap).
+> **Status:** Early development. The current version is two command-line Python scripts and one notebook working on synthetic CSV data. The only machine learning so far is **unsupervised K-Means clustering**; there are **no predictive models yet**. Those are planned and listed in the [Future Roadmap](#future-roadmap).
 
 ---
 
@@ -46,7 +47,8 @@ Fundraising teams, especially in individual giving, depend on understanding thei
 
 - Generates a reproducible synthetic dataset of 100 donors.
 - Prints a KPI report: total donors, total and average giving, the top donor, and inactive donors.
-- Classifies every donor as **High Value**, **Regular**, **New**, or **Inactive** using simple, explainable rules, and saves the result to CSV.
+- Classifies every donor as **High Value**, **Regular**, **New**, or **Inactive** using simple, explainable rules, and can save the result to CSV.
+- Groups donors into four clusters with **K-Means** on recency, frequency, and monetary value, and compares the clusters with the rule-based segments. A notebook walks through the method with charts.
 
 **Who might benefit:**
 
@@ -70,7 +72,7 @@ Fundraising organizations commonly face these challenges:
 | **Campaign performance analysis** | Teams need to know which campaigns and channels work in order to plan budgets. |
 | **Manual reporting and decision-making** | Spreadsheet-based reporting is slow, error-prone, and hard to repeat. |
 
-**How this project responds (current scope):** It addresses the first three challenges at a basic level: repeatable KPI reporting, inactive donor detection, and rule-based segmentation. Campaign performance analysis is **not** covered yet because the dataset has no campaign data. See [Planned Features](#3-planned-features).
+**How this project responds (current scope):** It addresses the first three challenges at a basic level: repeatable KPI reporting, inactive donor detection, rule-based segmentation, and data-driven clustering. Campaign performance analysis is **not** covered yet because the dataset has no campaign data. See [Planned Features](#3-planned-features).
 
 ---
 
@@ -80,7 +82,8 @@ Fundraising organizations commonly face these challenges:
 2. Calculate core fundraising KPIs with a single, repeatable command.
 3. Identify inactive (lapsed) donors and how much they have given in total.
 4. Segment donors with transparent, explainable rules that a fundraiser can read and question.
-5. Create a clean base for later work: exploratory analysis, churn prediction, forecasting, and responsible AI features.
+5. Test the rules against a data-driven view: cluster donors and compare the clusters with the segments.
+6. Create a clean base for later work: churn prediction, forecasting, and responsible AI features.
 
 ---
 
@@ -92,7 +95,7 @@ Fundraising organizations commonly face these challenges:
 
 - **What it does:** Creates `data/donors.csv` with 100 donors (`D001` to `D100`).
 - **Why it is useful:** Allows realistic analysis without using any real or private donor data.
-- **How it works** ([src/generate_donors.py](src/generate_donors.py)):
+- **How it works** (`generate_donors()` in [src/donor_analysis.py](src/donor_analysis.py), run with `--generate`):
   - Uses a fixed random seed (`42`), so every run produces the same file.
   - **Number of gifts:** geometric distribution (`p=0.15`), limited to 1–30. Most donors give a few times; a few give often.
   - **Average gift size:** log-normal distribution with a typical value around $50, limited to $10–$300.
@@ -102,7 +105,7 @@ Fundraising organizations commonly face these challenges:
 
 #### Flexible donor data loading
 
-- **What it does:** `load_donors()` in [src/donor_kpis.py](src/donor_kpis.py) reads donor CSV files in two formats.
+- **What it does:** `load_donors()` in [src/donor_analysis.py](src/donor_analysis.py) reads donor CSV files in two formats.
 - **Why it is useful:** Data exported for people (with `$` signs and text like "10 days ago") can be analyzed without manual cleaning.
 - **How it works:**
   - **Raw format:** `donor_id, total_donation, donation_count, days_since_last_donation`
@@ -112,7 +115,7 @@ Fundraising organizations commonly face these challenges:
 
 - **What it does:** Prints a summary of the donor base to the terminal.
 - **Why it is useful:** Gives a quick, repeatable health check of fundraising performance.
-- **How it works** ([src/donor_kpis.py](src/donor_kpis.py)):
+- **How it works** ([src/donor_analysis.py](src/donor_analysis.py)):
 
 | KPI | Definition |
 |---|---|
@@ -130,15 +133,25 @@ Fundraising organizations commonly face these challenges:
 
 #### Rule-based donor segmentation
 
-- **What it does:** Assigns one of four segments to every donor, prints the result, and saves `data/donor_segments.csv`.
+- **What it does:** Assigns one of four segments to every donor and prints a segment summary. With `--out`, it also saves the donors with a `segment` column to a CSV file.
 - **Why it is useful:** Groups donors so communication can be tailored (for example, thanking high-value donors or re-engaging inactive ones).
-- **How it works** ([src/segment_donors.py](src/segment_donors.py)): Uses `numpy.select` to apply ordered rules. See [Donor Segmentation](#donor-segmentation) for full details.
+- **How it works** (`segment()` in [src/donor_analysis.py](src/donor_analysis.py)): Uses `numpy.select` to apply ordered rules. See [Donor Segmentation](#donor-segmentation) for full details.
+
+#### K-Means donor clustering
+
+- **What it does:** Groups donors into clusters by behavior, prints a profile of each cluster, and shows how the clusters overlap with the rule-based segments. With `--out`, it saves the donors with `cluster` and `segment` columns.
+- **Why it is useful:** Rules reflect what fundraisers already believe. Clustering lets the data suggest groups on its own, which can confirm the rules or point to donors the rules miss.
+- **How it works** ([src/donor_clustering.py](src/donor_clustering.py)): K-Means from scikit-learn on log-scaled, standardized recency, frequency, and monetary features. See [AI and Machine Learning Approach](#ai-and-machine-learning-approach) for full details.
+
+#### Clustering notebook
+
+- **What it does:** [notebooks/donor_clustering.ipynb](notebooks/donor_clustering.ipynb) walks through the clustering step by step: feature distributions, choosing the number of clusters, cluster profiles, and the comparison with the rules.
+- **Why it is useful:** Shows the reasoning and the charts behind the command-line output.
+- **How it works:** Imports the functions from `src/`, so the notebook and the scripts always use the same logic.
 
 ### 2. In Progress
 
-| Item | Current state |
-|---|---|
-| Exploratory analysis notebook ([notebooks/donor_analysis.ipynb](notebooks/donor_analysis.ipynb)) | File created. It currently contains only a title cell; no analysis has been written yet. |
+Nothing is partly built at the moment. The next steps are listed under [Planned Features](#3-planned-features).
 
 ### 3. Planned Features
 
@@ -147,8 +160,7 @@ These features are **not implemented**. They are listed to show the project dire
 - At-Risk donor segment (donors whose giving is slowing down but who have not yet lapsed).
 - Campaign performance analysis (requires campaign and channel data, which the dataset does not have yet).
 - Donation trends over time (requires dated, per-gift transaction data).
-- Exploratory data analysis with charts in the notebook.
-- Machine learning models: churn prediction, clustering, donation forecasting.
+- Predictive machine learning models: churn prediction and donation forecasting.
 - AI-generated insights and fundraising content drafts, always reviewed by a person.
 - Interactive analytics dashboard.
 - Automated tests.
@@ -157,7 +169,7 @@ These features are **not implemented**. They are listed to show the project dire
 
 ## Donor Segmentation
 
-> **Segmentation is rule-based, not machine learning.** Each donor is classified by fixed thresholds that are easy to read, explain, and change.
+> **Segmentation is rule-based, not machine learning.** Each donor is classified by fixed thresholds that are easy to read, explain, and change. For the data-driven alternative, see [Donor clustering (K-Means)](#donor-clustering-k-means).
 
 ### Rules
 
@@ -206,21 +218,70 @@ In this synthetic data, 8% of donors provide about a third of all giving. This k
 
 ### Current state
 
-**No AI or machine learning model is implemented yet.** All current logic is descriptive analytics and rule-based classification:
+The project has one machine learning component: **unsupervised K-Means clustering**. It describes groups in past behavior; it does not predict anything. There are no predictive models yet.
 
 | Component | Technique | Is it ML? |
 |---|---|---|
 | Data generation | Random sampling from statistical distributions (NumPy) | No |
 | KPI report | Sums, averages, filtering (pandas) | No |
 | Segmentation | Fixed, ordered if/else rules (`numpy.select`) | No |
-
-There are therefore no trained models, predictions, or evaluation metrics to report.
+| Clustering | K-Means on RFM features (scikit-learn) | Yes, unsupervised |
 
 ### Why start with rules
 
 - Rules are fully transparent, which matters when decisions affect how donors are contacted.
-- They provide a **baseline**. Any future ML model should be compared against these rules to show that it actually adds value.
+- They provide a **baseline**. Any ML model should be compared against these rules to show that it actually adds value. The clustering below is the first such comparison.
 - They work with very little data, while ML needs more history and richer features.
+
+### Donor clustering (K-Means)
+
+**Features (RFM):**
+
+| Feature | Column | Meaning |
+|---|---|---|
+| Recency | `days_since_last_donation` | Days since the most recent gift |
+| Frequency | `donation_count` | Number of gifts |
+| Monetary | `total_donation` | Lifetime giving |
+
+**Preprocessing:** All three features are right-skewed. Each is log-transformed (`log1p`) so a few large donors do not dominate, then standardized (`StandardScaler`) so each feature counts equally in the distance calculation.
+
+**Model:** `KMeans(n_clusters=4, n_init=10, random_state=42)`. Clusters are renumbered so cluster 1 has the highest median lifetime giving, which keeps the numbering stable and readable.
+
+**Choosing k:** The script and notebook report inertia (elbow method) and silhouette score for k = 2 to 8.
+
+| k | Inertia | Silhouette |
+|---:|---:|---:|
+| 2 | 157.4 | 0.392 |
+| 3 | 118.6 | 0.380 |
+| **4** | **90.6** | **0.348** |
+| 5 | 69.2 | 0.332 |
+| 6 | 58.9 | 0.301 |
+
+There is no sharp elbow, and silhouette scores for k = 2 to 5 are close together. No k is a clear statistical winner, so k = 4 was chosen because it lines up with the four rule-based segments and makes the two approaches easy to compare. This is a judgment call, and `--k` lets you try others.
+
+**Cluster profiles on the current dataset:**
+
+| Cluster | Donors | Median days since last gift | Median gifts | Median lifetime giving | Share of giving | Pattern |
+|---:|---:|---:|---:|---:|---:|---|
+| 1 | 14 | 12 | 14 | $870 | 38% | Recent, frequent, highest giving |
+| 2 | 34 | 112 | 8 | $370 | 46% | Steady givers, last gift a few months ago |
+| 3 | 42 | 228 | 2 | $100 | 14% | Few gifts, drifting or lapsed |
+| 4 | 10 | 16 | 2 | $85 | 3% | Recent givers with only a few small gifts |
+
+**Compared with the rule-based segments (donor counts):**
+
+| Cluster | High Value | Regular | New | Inactive |
+|---:|---:|---:|---:|---:|
+| 1 | 5 | 9 | 0 | 0 |
+| 2 | 3 | 30 | 0 | 1 |
+| 3 | 0 | 19 | 12 | 11 |
+| 4 | 0 | 7 | 3 | 0 |
+
+**What the comparison shows:**
+
+- Cluster 3 contains 11 of the 12 *Inactive* donors and 12 of the 15 *New* donors. The rules call a one-gift donor "New" even if that gift was almost a year ago; the clustering groups them with the lapsing donors. For a retention campaign, that may be the more useful view.
+- Cluster 1 holds five of the eight *High Value* donors plus nine *Regular* donors who give often and recently but are below the $1,000 threshold. They are natural candidates for an upgrade ask.
+- Because the data is synthetic, these results show how the method works; they are not real-world findings.
 
 ### Planned AI/ML capabilities
 
@@ -230,26 +291,28 @@ The planned machine learning and AI work is described in the [Future Roadmap](#f
 
 ## System Architecture
 
-The project is a small, file-based pipeline of command-line Python scripts. There is no server, API, database, or user interface.
+The project is a small, file-based pipeline of command-line Python scripts and one notebook. There is no server, API, database, or user interface.
 
 ```mermaid
 flowchart LR
-    G["src/generate_donors.py<br/>synthetic data, seed 42"] -->|writes| D[("data/donors.csv")]
-    D -->|reads| K["src/donor_kpis.py<br/>KPI report"]
-    D -->|reads| S["src/segment_donors.py<br/>rule-based segmentation"]
-    K -.->|"imports load_donors, INACTIVE_DAYS"| S
-    K --> R1["Terminal: KPI report"]
-    S --> O[("data/donor_segments.csv")]
-    S --> R2["Terminal: segment per donor<br/>and segment summary"]
+    A["src/donor_analysis.py<br/>data generation, KPIs,<br/>rule-based segmentation"] -->|"--generate writes"| D[("data/donors.csv")]
+    D -->|reads| A
+    D -->|reads| C["src/donor_clustering.py<br/>K-Means clustering"]
+    A -.->|"imports load_donors, segment"| C
+    A --> R1["Terminal: KPI report<br/>and segment summary"]
+    C --> R2["Terminal: k scores, cluster profiles,<br/>clusters vs segments"]
+    A -.->|"imports"| N["notebooks/donor_clustering.ipynb<br/>charts and walkthrough"]
+    C -.->|"imports"| N
 ```
 
 **Data flow:**
 
-1. `generate_donors.py` creates `data/donors.csv`.
-2. `donor_kpis.py` loads the donor file and prints KPIs.
-3. `segment_donors.py` reuses the loader and the inactivity threshold from `donor_kpis.py`, adds a `segment` column, prints the results, and writes `data/donor_segments.csv`.
+1. `donor_analysis.py --generate` creates `data/donors.csv`.
+2. `donor_analysis.py` loads the donor file, prints the KPIs, assigns segments, and prints the segment summary. `--out` saves the segments to CSV.
+3. `donor_clustering.py` reuses the loader and `segment()` from `donor_analysis.py`, clusters the donors, and prints the profiles and the comparison with the segments. `--out` saves the clusters to CSV.
+4. The notebook imports the same functions and adds charts.
 
-Sharing `INACTIVE_DAYS` between the two scripts ensures the KPI report and the segmentation always use the same definition of "inactive."
+Keeping the loader, thresholds, and rules in one module ensures the KPI report, the segmentation, and the clustering always use the same definitions.
 
 ---
 
@@ -259,11 +322,13 @@ Sharing `INACTIVE_DAYS` between the two scripts ensures the KPI report and the s
 |---|---|---|
 | Language | Python 3 | Tested with Python 3.12.3 |
 | Data processing | pandas, NumPy | Tested with pandas 3.1.1 and NumPy 2.5.4 |
-| Notebooks | Jupyter | Listed in `requirements.txt`; the notebook is a placeholder |
+| Machine learning | scikit-learn | K-Means, `StandardScaler`, silhouette score; tested with 1.9.1 |
+| Charts | matplotlib | Used in the notebook; tested with 3.11.2 |
+| Notebooks | Jupyter | Installed separately; see [Installation and Setup](#installation-and-setup) |
 | Backend | None yet | Command-line scripts only |
 | Frontend | None yet | Output is printed to the terminal |
 | Database | None | Data is stored in CSV files |
-| AI / Machine Learning | None yet | See [Future Roadmap](#future-roadmap) |
+| Predictive AI / ML | None yet | See [Future Roadmap](#future-roadmap) |
 | Infrastructure / Deployment | None | Runs locally in a Python virtual environment |
 | Testing | None yet | See [Testing and Validation](#testing-and-validation) |
 
@@ -274,26 +339,23 @@ Sharing `INACTIVE_DAYS` between the two scripts ensures the KPI report and the s
 ```
 ai-fundraising/
 ├── data/
-│   ├── donors.csv              # 100 synthetic donors (generated)
-│   └── donor_segments.csv      # donors.csv plus a segment column (generated)
-├── notebooks/
-│   └── donor_analysis.ipynb    # exploratory analysis (placeholder, title cell only)
+│   └── donors.csv                  # 100 synthetic donors (generated, committed)
 ├── src/
-│   ├── generate_donors.py      # builds data/donors.csv
-│   ├── donor_kpis.py           # loads donor data and prints the KPI report
-│   └── segment_donors.py       # assigns a segment to each donor
+│   ├── donor_analysis.py           # data generation, loader, KPI report, segmentation
+│   └── donor_clustering.py         # K-Means clustering and comparison with segments
+├── notebooks/
+│   └── donor_clustering.ipynb      # clustering walkthrough with charts
 ├── .gitignore
-├── requirements.txt            # pandas, numpy, jupyter
+├── requirements.txt                # pinned versions
 └── README.md
 ```
 
 | Path | Purpose |
 |---|---|
-| [src/generate_donors.py](src/generate_donors.py) | Creates the synthetic dataset. Overwrites `data/donors.csv` on each run. |
-| [src/donor_kpis.py](src/donor_kpis.py) | Contains `load_donors()` (shared loader), the `INACTIVE_DAYS` constant, and the KPI report. |
-| [src/segment_donors.py](src/segment_donors.py) | Contains `segment()`, the `HIGH_VALUE_MIN` constant, and the segmentation report. |
-| [data/](data/) | Input and output CSV files. Both files are committed so the project can be explored without running anything. |
-| [notebooks/](notebooks/) | Space for exploratory analysis. |
+| [src/donor_analysis.py](src/donor_analysis.py) | `generate_donors()`, `load_donors()` (shared loader), the `INACTIVE_DAYS` and `HIGH_VALUE_MIN` constants, `segment()`, and the KPI and segment report. |
+| [src/donor_clustering.py](src/donor_clustering.py) | `rfm_features()`, `score_k()`, `cluster()`, `profile()`, `compare_with_segments()`, and the clustering report. |
+| [data/](data/) | The donor dataset, committed so the project can be explored without running anything. Optional `--out` files (`donor_segments.csv`, `donor_clusters.csv`) are ignored by Git. |
+| [notebooks/](notebooks/) | The clustering notebook. It is committed without outputs; run it to see the tables and charts. |
 
 ---
 
@@ -332,7 +394,7 @@ pip install -r requirements.txt
 The dataset is already included in `data/`. To regenerate it:
 
 ```bash
-python src/generate_donors.py
+python src/donor_analysis.py --generate
 ```
 
 > **Important:** Run all commands from the project root. The scripts use relative paths such as `data/donors.csv`.
@@ -340,17 +402,22 @@ python src/generate_donors.py
 ### 5. Run the analysis
 
 ```bash
-python src/donor_kpis.py        # KPI report
-python src/segment_donors.py    # segmentation; writes data/donor_segments.csv
+python src/donor_analysis.py      # KPI report and segment summary
+python src/donor_clustering.py    # K-Means clusters compared with the segments
 ```
+
+Add `--out <file>.csv` to either command to save the per-donor results. Use `--help` to see all options.
 
 ### 6. Open the notebook (optional)
 
+Jupyter is not in `requirements.txt`. Install it once, then open the notebook:
+
 ```bash
-jupyter notebook notebooks/donor_analysis.ipynb
+pip install jupyter
+jupyter notebook notebooks/donor_clustering.ipynb
 ```
 
-The notebook currently contains only a title cell.
+In VS Code, installing `ipykernel` is enough to run the notebook in the editor. The notebook finds `src/` and `data/` whether it is started from the project root or from `notebooks/`.
 
 ---
 
@@ -358,7 +425,7 @@ The notebook currently contains only a title cell.
 
 ### Source
 
-All data is **synthetic**. It is generated by [src/generate_donors.py](src/generate_donors.py) using NumPy random distributions. No real people, organizations, or donation records are included.
+All data is **synthetic**. It is generated by `generate_donors()` in [src/donor_analysis.py](src/donor_analysis.py) using NumPy random distributions. No real people, organizations, or donation records are included.
 
 > This project uses synthetic data only. It does not use, and must never use, real UNICEF donor data or any other private donor information.
 
@@ -373,11 +440,12 @@ All data is **synthetic**. It is generated by [src/generate_donors.py](src/gener
 | `donation_count` | integer | Number of gifts | 1–27 (median 4) |
 | `days_since_last_donation` | integer | Days since the most recent gift | 2–500 (median 116.5) |
 
-**`data/donor_segments.csv`**: the same columns plus:
+**Optional outputs** (written only when you pass `--out`): the same columns plus:
 
-| Column | Type | Meaning |
-|---|---|---|
-| `segment` | string | `High Value Donor`, `Regular Donor`, `New Donor`, or `Inactive Donor` |
+| Column | Written by | Type | Meaning |
+|---|---|---|---|
+| `segment` | both scripts | string | `High Value Donor`, `Regular Donor`, `New Donor`, or `Inactive Donor` |
+| `cluster` | `donor_clustering.py` | integer | Cluster number, 1 = highest median lifetime giving |
 
 ### Preprocessing
 
@@ -397,10 +465,10 @@ All data is **synthetic**. It is generated by [src/generate_donors.py](src/gener
 
 All outputs below come from running the scripts on the committed dataset.
 
-### KPI report
+### KPI report and segmentation
 
 ```bash
-python src/donor_kpis.py
+python src/donor_analysis.py --out data/donor_segments.csv
 ```
 
 ```text
@@ -424,22 +492,6 @@ donor_id  total_donation  donation_count  days_since_last_donation
     D041              50               1                       497
     D004              20               1                       400
     D067              20               1                       440
-```
-
-### Donor segmentation
-
-```bash
-python src/segment_donors.py
-```
-
-```text
-D001 → High Value Donor
-D002 → New Donor
-D003 → Regular Donor
-D004 → Inactive Donor
-D005 → High Value Donor
-D006 → Regular Donor
-...
 
 Segment summary:
   High Value Donor    8 donors  $    12,170
@@ -450,9 +502,48 @@ Segment summary:
 Saved data/donor_segments.csv
 ```
 
+Without `--out`, the report is the same and no file is written.
+
+### Donor clustering
+
+```bash
+python src/donor_clustering.py
+```
+
+```text
+Choosing k (lower inertia is tighter; higher silhouette is better separated):
+   inertia  silhouette
+k                     
+2  157.397       0.392
+3  118.602       0.380
+4   90.605       0.348
+5   69.164       0.332
+6   58.897       0.301
+7   52.842       0.315
+8   47.193       0.282
+
+Cluster profiles (k=4, cluster 1 = highest median giving):
+         donors median_days_since_last median_gifts median_total share_of_giving
+cluster                                                                         
+1            14                     12           14         $870             38%
+2            34                    112            8         $370             46%
+3            42                    228            2         $100             14%
+4            10                     16            2          $85              3%
+
+Clusters vs rule-based segments (donor counts):
+segment  High Value Donor  Regular Donor  New Donor  Inactive Donor
+cluster                                                            
+1                       5              9          0               0
+2                       3             30          0               1
+3                       0             19         12              11
+4                       0              7          3               0
+```
+
+Try a different number of clusters with `--k 3`, or save the labels with `--out data/donor_clusters.csv`.
+
 ### Analyzing a different donor file
 
-Both analysis scripts accept an optional file path. For example, a file in display format:
+Both scripts accept an optional file path. For example, a file in display format:
 
 ```csv
 Donor,Total Donation,Donations,Last Donation
@@ -462,7 +553,7 @@ D004,$20,1,400 days ago
 ```
 
 ```bash
-python src/donor_kpis.py path/to/display.csv
+python src/donor_analysis.py path/to/display.csv
 ```
 
 ```text
@@ -474,9 +565,11 @@ Inactive Donors:   1 of 3 (33%) with no gift in 365+ days
 ...
 ```
 
-> **Note:** `python src/segment_donors.py path/to/file.csv` also works, but it always writes its output to `data/donor_segments.csv`, replacing the existing file.
+> **Caution:** `--generate` writes the synthetic dataset to the given path. `python src/donor_analysis.py path/to/file.csv --generate` replaces that file.
 
 ### Exploring segments with pandas
+
+After running `python src/donor_analysis.py --out data/donor_segments.csv`:
 
 ```python
 import pandas as pd
@@ -502,7 +595,7 @@ donor_id  total_donation  donation_count  days_since_last_donation          segm
 
 ## Screenshots / Demo
 
-There are no screenshots yet. The project has no graphical interface; all output is printed to the terminal, as shown in [Usage Examples](#usage-examples).
+There are no screenshots yet. The scripts print to the terminal, as shown in [Usage Examples](#usage-examples). The clustering notebook draws three charts when run: feature distributions, inertia and silhouette by k, and each cluster plotted against all other donors.
 
 ---
 
@@ -514,15 +607,14 @@ There are no screenshots yet. The project has no graphical interface; all output
 
 ### Manual validation
 
-**Reproducibility check.** The generator uses a fixed seed, so regenerating the data should produce files identical to the committed ones:
+**Reproducibility check.** The generator uses a fixed seed, so regenerating the data should produce a file identical to the committed one:
 
 ```bash
-python src/generate_donors.py
-python src/segment_donors.py
+python src/donor_analysis.py --generate
 git diff --exit-code data/
 ```
 
-No output from `git diff` means the outputs match the committed files. This check passed with Python 3.12.3, pandas 3.1.1, and NumPy 2.5.4.
+No output from `git diff` means the data matches the committed file. This check passed with Python 3.12.3, pandas 3.1.1, and NumPy 2.5.4. K-Means also uses a fixed seed (`random_state=42`), so the clustering output is repeatable.
 
 **Reference donors.** Donors `D001`–`D006` have fixed values, so each segmentation rule can be checked by hand:
 
@@ -540,10 +632,12 @@ No output from `git diff` means the outputs match the committed files. This chec
 ## Known Limitations
 
 - No automated tests.
-- `requirements.txt` does not pin versions, so a future pandas or NumPy release could change behavior.
-- Scripts must be run from the project root because file paths are relative.
-- The segmentation output path is fixed to `data/donor_segments.csv`.
+- Jupyter is not listed in `requirements.txt` and must be installed separately to run the notebook.
+- The notebook is committed without outputs, so its charts only appear after it is run.
+- Scripts must be run from the project root because the default data path is relative.
 - Thresholds are set as constants in the code and are not configurable from the command line.
+- The number of clusters (k = 4) is a judgment call; the silhouette scores do not single out a best k. K-Means also assumes roughly round, similar-sized groups.
+- Clusters describe past behavior only and are not validated against any outcome such as future giving.
 - The KPI report text says "365+ days," but the rule is strictly *more than* 365 days (366 or more).
 - The dataset is a single snapshot: there are no dates, individual transactions, campaigns, or channels.
 - No validation of input data (missing values, negative amounts, wrong column names).
@@ -567,19 +661,20 @@ This project has **not** been assessed against any data protection regulation or
 
 ## Future Roadmap
 
-Everything in this section is **planned and not yet implemented.** The phases build on each other.
+Checked items are done. Everything unchecked is **planned and not yet implemented.** The phases build on each other.
 
 ### Phase 1: Engineering foundations
 
-- [ ] Add a `pytest` suite for `load_donors()`, the KPI calculations, and `segment()`.
-- [ ] Pin dependency versions in `requirements.txt`.
-- [ ] Make file paths and thresholds configurable through command-line arguments.
+- [ ] Add a `pytest` suite for `load_donors()`, the KPI calculations, `segment()`, and `cluster()`.
+- [x] Pin dependency versions in `requirements.txt`.
+- [x] Make input and output file paths configurable through command-line arguments.
+- [ ] Make thresholds configurable through command-line arguments.
 - [ ] Validate input data (required columns, missing or negative values).
 
 ### Phase 2: Richer data and analytics
 
 - [ ] Extend the synthetic dataset with dated, per-gift transactions, campaigns, and channels.
-- [ ] Complete the exploratory analysis notebook with charts.
+- [x] Notebook with charts for the clustering analysis.
 - [ ] Add an **At-Risk** segment (for example, donors with growing gaps between gifts who have not yet lapsed).
 - [ ] RFM (Recency, Frequency, Monetary) scoring.
 - [ ] Campaign performance analysis (income, response rate, and cost per campaign).
@@ -587,7 +682,7 @@ Everything in this section is **planned and not yet implemented.** The phases bu
 ### Phase 3: Machine learning
 
 - [ ] **Donor churn prediction:** a classification model (for example, logistic regression as a baseline, then tree-based models) evaluated with appropriate metrics and compared against the rule-based approach.
-- [ ] **Data-driven segmentation:** clustering on RFM features, compared with the current rules.
+- [x] **Data-driven segmentation:** K-Means clustering on RFM features, compared with the current rules.
 - [ ] **Donation forecasting:** time-series forecasting of income.
 - [ ] **Campaign performance prediction.**
 
@@ -611,12 +706,14 @@ Everything in this section is **planned and not yet implemented.** The phases bu
 - **Donor data analysis:** aggregation, filtering, and summarizing with pandas.
 - **Python and data processing:** reusable functions, shared constants across modules, and handling two input formats.
 - **Synthetic data design:** choosing realistic distributions and linking variables (more gifts lead to higher totals and more recent activity).
-- **Reproducibility:** fixed random seed and committed reference data.
-- **Responsible data practice:** privacy-safe synthetic data and explainable rules.
+- **Unsupervised machine learning:** feature scaling for skewed data, K-Means, choosing k with inertia and silhouette scores, and checking a model against a rule-based baseline.
+- **Data visualization:** notebook charts that explain the method, not just the result.
+- **Reproducibility:** fixed random seeds and committed reference data.
+- **Responsible data practice:** privacy-safe synthetic data, explainable rules, and honest reporting of where the model is weak.
 
 **Targeted in upcoming phases:**
 
-- AI/ML application development (churn prediction, clustering, forecasting).
+- Predictive ML application development (churn prediction, forecasting).
 - API and software architecture (services and dashboards).
 - Model evaluation and responsible AI governance.
 

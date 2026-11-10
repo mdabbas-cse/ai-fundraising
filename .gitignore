@@ -17,3 +17,7 @@ __pycache__/
 .vscode/
 .idea/
 .DS_Store
+
+# Generated outputs (scripts write these only with --out)
+data/donor_segments.csv
+data/donor_clusters.csv
