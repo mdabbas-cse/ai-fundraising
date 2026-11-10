@@ -14,8 +14,37 @@ A Python learning project that explores data-driven fundraising. It generates a 
 
 ---
 
+## What's New
+
+The latest update adds **data-driven donor clustering**, so the rule-based segments can be compared with groups the data finds on its own.
+
+- **New: [src/donor_clustering.py](src/donor_clustering.py).** K-Means clustering on recency, frequency, and monetary value (RFM). It prints scores for choosing the number of clusters, a profile of each cluster, and a comparison with the rule-based segments.
+- **New: [notebooks/donor_clustering.ipynb](notebooks/donor_clustering.ipynb).** A step-by-step walkthrough with charts.
+- **New: [src/donor_analysis.py](src/donor_analysis.py).** Data generation, the KPI report, and rule-based segmentation in one module. It produces the same dataset and segments as the earlier scripts and adds `--generate` and `--out` options.
+- **Updated: `requirements.txt`.** Versions are now pinned, and scikit-learn and matplotlib are added.
+
+![Each of the four K-Means clusters highlighted against all other donors, plotted by days since last gift and lifetime giving](images/clusters.png)
+
+**Key findings on the synthetic dataset:**
+
+| Cluster | Donors | Share of giving | Pattern |
+|---:|---:|---:|---|
+| 1 | 14 | 38% | Recent, frequent, highest giving |
+| 2 | 34 | 46% | Steady givers, last gift a few months ago |
+| 3 | 42 | 14% | Few gifts, drifting or lapsed |
+| 4 | 10 | 3% | Recent givers with only a few small gifts |
+
+- **14 donors (cluster 1) give 38% of all income.** Nine of them are *Regular* donors below the $1,000 *High Value* threshold who give often and recently, which makes them natural candidates for an upgrade ask.
+- **Cluster 3 contains most *Inactive* donors (11 of 12) and most *New* donors (12 of 15).** The rules call a one-gift donor "New" even when that gift was almost a year ago; the clustering groups those donors with the lapsing ones.
+- **No number of clusters is a clear statistical winner** (silhouette scores of about 0.33 to 0.39 for k = 2 to 5), so k = 4 was chosen to match the four segments.
+
+The data is synthetic, so these findings show how the method works rather than real donor behavior. Full details are in [Donor clustering (K-Means)](#donor-clustering-k-means).
+
+---
+
 ## Table of Contents
 
+- [What's New](#whats-new)
 - [Overview](#overview)
 - [Problem Statement](#problem-statement)
 - [Project Objectives](#project-objectives)
@@ -245,6 +274,8 @@ The project has one machine learning component: **unsupervised K-Means clusterin
 
 **Preprocessing:** All three features are right-skewed. Each is log-transformed (`log1p`) so a few large donors do not dominate, then standardized (`StandardScaler`) so each feature counts equally in the distance calculation.
 
+![Histograms of days since last gift, number of gifts, and lifetime giving; all three are right-skewed](images/feature-distributions.png)
+
 **Model:** `KMeans(n_clusters=4, n_init=10, random_state=42)`. Clusters are renumbered so cluster 1 has the highest median lifetime giving, which keeps the numbering stable and readable.
 
 **Choosing k:** The script and notebook report inertia (elbow method) and silhouette score for k = 2 to 8.
@@ -257,6 +288,8 @@ The project has one machine learning component: **unsupervised K-Means clusterin
 | 5 | 69.2 | 0.332 |
 | 6 | 58.9 | 0.301 |
 
+![Inertia falls steadily from k = 2 to 8 with no sharp elbow; silhouette score declines slowly from 0.39 to 0.28](images/choosing-k.png)
+
 There is no sharp elbow, and silhouette scores for k = 2 to 5 are close together. No k is a clear statistical winner, so k = 4 was chosen because it lines up with the four rule-based segments and makes the two approaches easy to compare. This is a judgment call, and `--k` lets you try others.
 
 **Cluster profiles on the current dataset:**
@@ -267,6 +300,8 @@ There is no sharp elbow, and silhouette scores for k = 2 to 5 are close together
 | 2 | 34 | 112 | 8 | $370 | 46% | Steady givers, last gift a few months ago |
 | 3 | 42 | 228 | 2 | $100 | 14% | Few gifts, drifting or lapsed |
 | 4 | 10 | 16 | 2 | $85 | 3% | Recent givers with only a few small gifts |
+
+The chart in [What's New](#whats-new) shows each cluster against all other donors.
 
 **Compared with the rule-based segments (donor counts):**
 
@@ -345,6 +380,7 @@ ai-fundraising/
 │   └── donor_clustering.py         # K-Means clustering and comparison with segments
 ├── notebooks/
 │   └── donor_clustering.ipynb      # clustering walkthrough with charts
+├── images/                         # charts exported from the notebook for this README
 ├── .gitignore
 ├── requirements.txt                # pinned versions
 └── README.md
@@ -356,6 +392,7 @@ ai-fundraising/
 | [src/donor_clustering.py](src/donor_clustering.py) | `rfm_features()`, `score_k()`, `cluster()`, `profile()`, `compare_with_segments()`, and the clustering report. |
 | [data/](data/) | The donor dataset, committed so the project can be explored without running anything. Optional `--out` files (`donor_segments.csv`, `donor_clusters.csv`) are ignored by Git. |
 | [notebooks/](notebooks/) | The clustering notebook. It is committed without outputs; run it to see the tables and charts. |
+| [images/](images/) | PNG copies of the notebook charts, used in this README. |
 
 ---
 
@@ -595,7 +632,15 @@ donor_id  total_donation  donation_count  days_since_last_donation          segm
 
 ## Screenshots / Demo
 
-There are no screenshots yet. The scripts print to the terminal, as shown in [Usage Examples](#usage-examples). The clustering notebook draws three charts when run: feature distributions, inertia and silhouette by k, and each cluster plotted against all other donors.
+The scripts print to the terminal, as shown in [Usage Examples](#usage-examples). The clustering notebook draws the three charts below. They were exported from the notebook into [images/](images/) and are shown here because the notebook itself is committed without outputs.
+
+| Chart | What it shows |
+|---|---|
+| [Feature distributions](images/feature-distributions.png) | Recency, frequency, and lifetime giving are all right-skewed, which is why they are log-scaled before clustering. |
+| [Choosing k](images/choosing-k.png) | Inertia and silhouette score for k = 2 to 8. |
+| [Clusters](images/clusters.png) | Each of the four clusters highlighted against all other donors. |
+
+![Each of the four K-Means clusters highlighted against all other donors](images/clusters.png)
 
 ---
 
