@@ -1,0 +1,101 @@
+donor_id,total_donation,donation_count,days_since_last_donation,segment
+D001,1000,10,10,High Value Donor
+D002,50,1,5,New Donor
+D003,500,5,200,Regular Donor
+D004,20,1,400,Inactive Donor
+D005,2000,20,15,High Value Donor
+D006,200,4,30,Regular Donor
+D007,120,1,98,New Donor
+D008,480,13,2,Regular Donor
+D009,180,6,127,Regular Donor
+D010,300,8,20,Regular Donor
+D011,90,1,500,Inactive Donor
+D012,1340,22,196,High Value Donor
+D013,400,11,222,Regular Donor
+D014,140,2,98,Regular Donor
+D015,110,2,3,Regular Donor
+D016,180,2,500,Inactive Donor
+D017,100,3,96,Regular Donor
+D018,210,5,456,Inactive Donor
+D019,160,4,497,Inactive Donor
+D020,60,3,332,Regular Donor
+D021,360,6,42,Regular Donor
+D022,60,1,145,New Donor
+D023,150,3,329,Regular Donor
+D024,130,3,66,Regular Donor
+D025,90,4,27,Regular Donor
+D026,390,10,77,Regular Donor
+D027,80,2,500,Inactive Donor
+D028,150,5,159,Regular Donor
+D029,270,6,103,Regular Donor
+D030,60,1,30,New Donor
+D031,930,6,116,Regular Donor
+D032,110,2,500,Inactive Donor
+D033,60,1,45,New Donor
+D034,910,19,50,Regular Donor
+D035,330,21,137,Regular Donor
+D036,540,11,122,Regular Donor
+D037,160,3,206,Regular Donor
+D038,220,1,363,New Donor
+D039,360,8,47,Regular Donor
+D040,240,4,52,Regular Donor
+D041,50,1,497,Inactive Donor
+D042,120,5,222,Regular Donor
+D043,100,1,500,Inactive Donor
+D044,1180,15,189,High Value Donor
+D045,160,2,151,Regular Donor
+D046,200,7,78,Regular Donor
+D047,350,3,277,Regular Donor
+D048,110,5,140,Regular Donor
+D049,360,5,162,Regular Donor
+D050,370,2,336,Regular Donor
+D051,610,22,141,Regular Donor
+D052,360,10,39,Regular Donor
+D053,960,18,33,Regular Donor
+D054,520,14,7,Regular Donor
+D055,120,6,105,Regular Donor
+D056,830,16,2,Regular Donor
+D057,30,1,187,New Donor
+D058,130,2,165,Regular Donor
+D059,30,1,101,New Donor
+D060,380,3,154,Regular Donor
+D061,130,4,4,Regular Donor
+D062,80,2,8,Regular Donor
+D063,900,11,156,Regular Donor
+D064,70,3,77,Regular Donor
+D065,170,3,23,Regular Donor
+D066,550,5,99,Regular Donor
+D067,20,1,440,Inactive Donor
+D068,560,10,23,Regular Donor
+D069,60,1,292,New Donor
+D070,2160,27,5,High Value Donor
+D071,240,10,5,Regular Donor
+D072,50,2,160,Regular Donor
+D073,70,1,233,New Donor
+D074,660,11,91,Regular Donor
+D075,460,8,137,Regular Donor
+D076,550,9,372,Inactive Donor
+D077,330,10,68,Regular Donor
+D078,60,1,117,New Donor
+D079,180,3,274,Regular Donor
+D080,30,1,94,New Donor
+D081,1990,13,48,High Value Donor
+D082,470,7,9,Regular Donor
+D083,70,3,4,Regular Donor
+D084,70,1,500,Inactive Donor
+D085,80,3,313,Regular Donor
+D086,240,3,206,Regular Donor
+D087,900,9,52,Regular Donor
+D088,210,7,21,Regular Donor
+D089,1250,14,13,High Value Donor
+D090,260,4,43,Regular Donor
+D091,80,1,239,New Donor
+D092,1250,8,132,High Value Donor
+D093,390,9,107,Regular Donor
+D094,190,6,40,Regular Donor
+D095,290,10,293,Regular Donor
+D096,150,5,179,Regular Donor
+D097,240,5,108,Regular Donor
+D098,250,4,141,Regular Donor
+D099,60,1,163,New Donor
+D100,80,1,85,New Donor
